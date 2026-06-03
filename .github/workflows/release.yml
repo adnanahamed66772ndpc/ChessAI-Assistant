@@ -19,9 +19,6 @@ permissions:
 # platform. AVX2 variant runs on any Intel/AMD CPU from ~2013 onwards.
 env:
   STOCKFISH_TAG: sf_17.1
-  STOCKFISH_WINDOWS: stockfish-windows-x86-64-avx2.zip
-  STOCKFISH_LINUX:   stockfish-ubuntu-x86-64-avx2.tar
-  STOCKFISH_MACOS:   stockfish-macos-x86-64-modern.tar
 
 jobs:
   build:
@@ -42,11 +39,15 @@ jobs:
             stockfish_archive: stockfish-ubuntu-x86-64-avx2.tar
             stockfish_bin: stockfish/stockfish-ubuntu-x86-64-avx2
             stockfish_dst: stockfish/stockfish
+          # GitHub's macos-latest runner is Apple Silicon (arm64) as of 2024,
+          # so we bundle the m1 native Stockfish build. Users on Intel Macs
+          # can drop in stockfish-macos-x86-64-* from the official release
+          # if needed; the engine path is the same.
           - os: macos-latest
             label: macos
             artifact: ChessAI-macos
-            stockfish_archive: stockfish-macos-x86-64-modern.tar
-            stockfish_bin: stockfish/stockfish-macos-x86-64-modern
+            stockfish_archive: stockfish-macos-m1-apple-silicon.tar
+            stockfish_bin: stockfish/stockfish-macos-m1-apple-silicon
             stockfish_dst: stockfish/stockfish
 
     runs-on: ${{ matrix.os }}
