@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Chess AI Assistant</title>
+  <meta name="description" content="Desktop chess assistant: detects the board from a screenshot or live screen capture and suggests the best moves using bundled Stockfish 17.1.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%231e1e24'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23ffd866'>♞</text></svg>">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --panel: #16161a;
+      --panel-2: #1f1f24;
+      --border: #2a2a30;
+      --text: #e8e8ec;
+      --muted: #9a9aa6;
+      --accent: #4f7be8;
+      --accent-2: #ffd866;
+      --green: #1ea672;
+      --pink: #e84c84;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(ellipse at top, #1a1a22 0%, var(--bg) 60%) fixed;
+      color: var(--text);
+      font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .wrap { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    header {
+      text-align: center;
+      padding: 40px 0 28px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      color: var(--accent-2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(34px, 6vw, 56px);
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, #ffd866 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .cta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 28px 0 8px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      transition: transform 0.08s ease, background 0.15s ease;
+    }
+    .btn:hover { background: #2a2a32; text-decoration: none; transform: translateY(-1px); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn.primary:hover { background: #6492f0; }
+
+    section { margin-top: 56px; }
+    h2 {
+      font-size: 26px;
+      margin: 0 0 18px;
+      letter-spacing: -0.01em;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .feature {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 18px 16px;
+    }
+    .feature h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
+      color: var(--accent-2);
+    }
+    .feature p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+    .downloads {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .dl {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dl .icon { font-size: 32px; line-height: 1; }
+    .dl h3 { margin: 0; font-size: 18px; }
+    .dl p { margin: 0; color: var(--muted); font-size: 14px; min-height: 38px; }
+    .dl a {
+      margin-top: 8px;
+      align-self: flex-start;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .dl a:hover { background: #6492f0; text-decoration: none; }
+    .dl.source a { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); }
+    .dl.source a:hover { background: #2a2a32; }
+
+    pre {
+      background: #0a0a0d;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      overflow-x: auto;
+      color: #d8d8dc;
+    }
+    p code, li code {
+      background: #0a0a0d;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: var(--accent-2);
+    }
+
+    ul { padding-left: 22px; }
+    li { margin: 6px 0; }
+
+    .note {
+      background: rgba(232, 76, 132, 0.08);
+      border: 1px solid rgba(232, 76, 132, 0.35);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 14.5px;
+      color: #f4c0d2;
+    }
+    .note strong { color: white; }
+
+    footer {
+      margin-top: 80px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--muted); border-bottom: 1px dotted var(--muted); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="badge">v1.1.0 · Windows · Linux · macOS</span>
+    <h1>Chess AI Assistant</h1>
+    <p class="tagline">
+      Drop a chess screenshot in — or capture your screen live —
+      and the bundled Stockfish 17.1 engine tells you the best move
+      in under a second.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/adnanahamed66772ndpc/ChessAI-Assistant/releases/latest">⬇  Download for your OS</a>
+      <a class="btn" href="https://github.com/adnanahamed66772ndpc/ChessAI-Assistant">⭐  GitHub repo</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>What it does</h2>
+    <div class="features">
+      <div class="feature">
+        <h3>📸  Screenshot → board</h3>
+        <p>Drop in a PNG of any chess position. OpenCV finds the board, warps it to a grid, and recognises every piece.</p>
+      </div>
+      <div class="feature">
+        <h3>🎥  Live capture</h3>
+        <p>Pick a region of your monitor with one drag. Arrows redraw automatically the moment the position changes.</p>
+      </div>
+      <div class="feature">
+        <h3>♞  Stockfish 17.1, full strength</h3>
+        <p>Bundled NNUE engine, multi-core, 1 GB hash. Optional ELO cap from 1320 to 3190 for casual play.</p>
+      </div>
+      <div class="feature">
+        <h3>🎨  Multi-theme detection</h3>
+        <p>Chess.com, Worldchess.com, Lichess and a default Merida set ship together. The detector picks the best match per square.</p>
+      </div>
+      <div class="feature">
+        <h3>📋  PGN export &amp; history</h3>
+        <p>Undo / redo, jump to any earlier move, copy the whole game as PGN to your clipboard.</p>
+      </div>
+      <div class="feature">
+        <h3>🛡️  Privacy-safe</h3>
+        <p>Everything runs locally. No network calls, no telemetry, no account.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Downloads</h2>
+    <div class="downloads">
+      <div class="dl">
+        <div class="icon">🪟</div>
+        <h3>Windows</h3>
+        <p>Extract the zip and double-click <code>ChessAI.exe</code>.</p>
+        <a href="https://github.com/adnanahamed66772ndpc/ChessAI-Assistant/releases/latest/download/ChessAI-windows-v1.1.0.zip">ChessAI-windows-v1.1.0.zip</a>
+      </div>
+      <div class="dl">
+        <div class="icon">🐧</div>
+        <h3>Linux</h3>
+        <p>Built on Ubuntu LTS. Extract and run <code>./ChessAI</code>.</p>
+        <a href="https://github.com/adnanahamed66772ndpc/ChessAI-Assistant/releases/latest/download/ChessAI-linux-v1.1.0.zip">ChessAI-linux-v1.1.0.zip</a>
+      </div>
+      <div class="dl">
+        <div class="icon">🍎</div>
+        <h3>macOS (Apple Silicon)</h3>
+        <p>Native arm64 build. May need <code>xattr -dr com.apple.quarantine</code>.</p>
+        <a href="https://github.com/adnanahamed66772ndpc/ChessAI-Assistant/releases/latest/download/ChessAI-macos-v1.1.0.zip">ChessAI-macos-v1.1.0.zip</a>
+      </div>
+      <div class="dl source">
+        <div class="icon">📦</div>
+        <h3>Source code</h3>
+        <p>Python source + bundled Stockfish + all template sets.</p>
+        <a href="https://github.com/adnanahamed66772ndpc/ChessAI-Assistant/releases/latest/download/ChessAI-source-v1.1.0.zip">ChessAI-source-v1.1.0.zip</a>
+      </div>
+    </div>
+    <p style="color: var(--muted); margin-top: 14px; font-size: 14px;">
+      Always available at the
+      <a href="https://github.com/adnanahamed66772ndpc/ChessAI-Assistant/releases/latest">latest release page</a>.
+    </p>
+  </section>
+
+  <section>
+    <h2>Run from source</h2>
+<pre>git clone https://github.com/adnanahamed66772ndpc/ChessAI-Assistant
+cd ChessAI-Assistant
+python -m venv venv
+venv\Scripts\activate           <span style="color:var(--muted)"># or: source venv/bin/activate</span>
+pip install pyside6 mss opencv-python python-chess flask numpy
+python desktop_app.py            <span style="color:var(--muted)"># native desktop app</span>
+python main.py                   <span style="color:var(--muted)"># Flask web UI on http://127.0.0.1:5000</span></pre>
+  </section>
+
+  <section>
+    <h2>Adding your own piece-style</h2>
+    <p>
+      Two extractors are included. Use the per-piece extractor when you want
+      to grab close-up screenshots one piece at a time:
+    </p>
+<pre>python extract_single_pieces.py "path\to\your_pieces_folder" my_theme</pre>
+    <p>
+      Filename parsing is spelling-tolerant — <code>wight rook on black squear.png</code>
+      works the same as <code>white rook on dark square.png</code>. The
+      detector automatically loads any new subfolder of <code>piece_templates/</code>.
+    </p>
+  </section>
+
+  <section>
+    <h2>Notes</h2>
+    <div class="note">
+      <strong>Antivirus / SmartScreen:</strong>
+      the Windows build is unsigned. PyInstaller binaries sometimes trigger
+      Windows Defender SmartScreen on first launch — click
+      <em>More info → Run anyway</em>. This release uses one-folder layout
+      (no UPX, no single-file self-extraction) to minimise false positives.
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      Stockfish 17.1 (GPLv3) bundled · UI &amp; detection by
+      <a href="https://github.com/adnanahamed66772ndpc">Adnan Ahamed</a>
+    </p>
+  </footer>
+</div>
+</body>
+</html>
