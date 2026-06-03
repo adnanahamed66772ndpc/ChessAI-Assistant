@@ -90,7 +90,14 @@ class ChessAnalyzer:
         self._spawn_engine()
 
     def _spawn_engine(self) -> None:
-        self._engine = chess.engine.SimpleEngine.popen_uci(self.path)
+        # Hide Stockfish's console on Windows. Without this, a windowed parent
+        # (pythonw / PyInstaller --windowed exe) that has no console of its
+        # own will get a fresh black cmd window every time it spawns the
+        # engine subprocess. CREATE_NO_WINDOW (0x08000000) suppresses it.
+        popen_kwargs = {}
+        if platform.system() == "Windows":
+            popen_kwargs["creationflags"] = 0x08000000  # CREATE_NO_WINDOW
+        self._engine = chess.engine.SimpleEngine.popen_uci(self.path, **popen_kwargs)
         self._engine.configure({
             "Threads": self._configured_threads,
             "Hash": self._configured_hash,
