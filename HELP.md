@@ -4,6 +4,32 @@ Sob feature ekhane explain kora ache. Bengali + English mix.
 
 ---
 
+## ⚠️  Disclaimer — please read
+
+**Ei software shudhu study, analysis, ar nijer game review er jonno** —
+real-time live game e use kora **cheating** ar prottek major chess platform
+(chess.com, lichess.org, worldchess.com, chess24, FIDE Online Arena, OTB
+tournaments) er **rules-violation**.
+
+Wrong use korle: account ban, rating loss, title forfeit, tournament
+disqualification, ba legal action — ei sob er **dayitto tomar nijer**. Author
+or contributors **kono dayee nay** misuse er kono consequence er jonno.
+
+**OK use:**
+- Tomar nijer purano games review kora
+- Tactics / opening / endgame practice
+- Chess software banano ba training
+- Puzzle / position research, teaching
+
+**Not OK:**
+- Live online ba OTB game-er somoy move suggestion neoa
+- Bot account jeta automatic play kore
+- Student ke rated game er somoy real-time coach kora
+
+Use korar agei niye nijer responsibility bujhe nao.
+
+---
+
 ## 1. Position section (board er position set kora)
 
 ### FEN

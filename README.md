@@ -107,6 +107,44 @@ loads any subdirectory of `piece_templates/` — no code change needed.
 └── uploads/                   # Detector debug images (safe to delete)
 ```
 
+## ⚠️ Disclaimer — read before using
+
+This software is provided **for personal study, position analysis, and
+post-game review only**.
+
+Using Chess AI Assistant — or any external engine — to choose moves during a
+live game on platforms such as **chess.com, lichess.org, worldchess.com,
+chess24, FIDE Online Arena, Chessable, OTB tournaments**, or any rated
+competition is **cheating**. It violates the Terms of Service of every major
+chess site, the FIDE Anti-Cheating Regulations, and the rules of essentially
+every chess tournament in the world. Consequences typically include account
+closure, forfeiture of titles/ratings, bans, and in tournament settings,
+disqualification or fines.
+
+> **You are solely responsible for how you use this software.** By
+> downloading, installing, or running it you agree that the author and any
+> contributors are **not liable** for any disciplinary action, account
+> termination, rating loss, tournament penalty, legal consequence, or other
+> harm resulting from misuse.
+
+### Acceptable uses
+
+- Analysing your own past games after they're finished
+- Studying tactics, openings, and endgames
+- Building / training chess software
+- Position research and puzzle creation
+- Teaching and demonstration
+
+### Not acceptable
+
+- Real-time assistance during any live online or OTB game
+- Bot accounts that play autonomously on chess sites
+- Coaching a student in real time while they're playing a rated game
+
+If you're not sure whether your use is allowed, **ask the platform's support
+team first**, or err on the side of not using the tool during play.
+
 ## License
 
-Stockfish is GPLv3. This project's source is provided as-is for personal use.
+Stockfish is GPLv3. This project's source is provided as-is for personal,
+non-commercial use under the same terms.

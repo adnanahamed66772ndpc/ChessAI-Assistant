@@ -176,6 +176,20 @@
       color: #f4c0d2;
     }
     .note strong { color: white; }
+    .warn {
+      background: rgba(255, 165, 0, 0.08);
+      border: 1px solid rgba(255, 165, 0, 0.45);
+      border-radius: 12px;
+      padding: 18px 20px;
+      font-size: 14.5px;
+      color: #ffd9a8;
+    }
+    .warn h3 { color: #ffb347; margin: 0 0 8px; font-size: 17px; }
+    .warn ul { margin: 8px 0 0 0; padding-left: 20px; }
+    .warn li { color: #f0d4ad; }
+    .warn strong { color: white; }
+    .warn .acceptable { color: #b8e6b8; }
+    .warn .forbidden { color: #ffb4b4; }
 
     footer {
       margin-top: 80px;
@@ -301,6 +315,53 @@ python main.py                   <span style="color:var(--muted)"># Flask web UI
       Windows Defender SmartScreen on first launch — click
       <em>More info → Run anyway</em>. This release uses one-folder layout
       (no UPX, no single-file self-extraction) to minimise false positives.
+    </div>
+  </section>
+
+  <section>
+    <h2>⚠️  Disclaimer — read before using</h2>
+    <div class="warn">
+      <h3>For study and analysis only</h3>
+      <p>
+        Chess AI Assistant is intended for <strong>personal study, post-game
+        analysis, position research, and chess-software development</strong>.
+        Using it — or any external engine — to choose moves during a live game
+        on platforms such as
+        <strong>chess.com, lichess.org, worldchess.com, chess24, FIDE
+        Online Arena</strong>, in <strong>rated tournaments</strong>, or in
+        <strong>over-the-board play</strong> is <strong>cheating</strong>.
+      </p>
+      <p>
+        Such use violates the Terms of Service of every major chess site,
+        the FIDE Anti-Cheating Regulations, and tournament rules worldwide.
+        Consequences include account closure, forfeiture of titles or
+        ratings, bans, disqualification, and potentially fines or legal
+        action.
+      </p>
+
+      <p class="acceptable"><strong>Acceptable uses ✅</strong></p>
+      <ul class="acceptable">
+        <li>Reviewing your own finished games</li>
+        <li>Studying tactics, openings, and endgames</li>
+        <li>Building or training chess software</li>
+        <li>Position research and puzzle creation</li>
+        <li>Teaching and demonstration</li>
+      </ul>
+
+      <p class="forbidden"><strong>Not acceptable ❌</strong></p>
+      <ul class="forbidden">
+        <li>Real-time assistance during any live online or OTB game</li>
+        <li>Bot accounts that play autonomously on chess sites</li>
+        <li>Coaching a student in real time during their rated game</li>
+      </ul>
+
+      <p>
+        <strong>You are solely responsible</strong> for how you use this
+        software. By downloading, installing, or running it you agree that
+        the author and contributors are <strong>not liable</strong> for any
+        account termination, rating loss, tournament penalty, legal
+        consequence, or other harm resulting from misuse.
+      </p>
     </div>
   </section>
 
