@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chess AI Assistant</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header>
+  <h1>Chess AI Assistant</h1>
+  <span class="sub">local · Stockfish 17.1 · NNUE</span>
+</header>
+
+<main>
+  <section class="left">
+    <div class="upload-row">
+      <label class="btn primary">
+        Upload board image
+        <input type="file" id="img-file" accept="image/*" hidden>
+      </label>
+      <button id="live-btn" class="btn primary" title="Share your screen and auto-detect moves">▶ Live capture</button>
+      <button id="reset-btn" class="btn" title="Empty board">Empty</button>
+      <button id="start-btn" class="btn" title="Starting position">Start</button>
+      <button id="undo-btn" class="btn" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
+      <button id="redo-btn" class="btn" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
+      <button id="pgn-btn" class="btn" title="Copy PGN to clipboard">Copy PGN</button>
+    </div>
+
+    <div id="live-panel" class="live-panel hidden">
+      <div class="live-preview-wrap">
+        <video id="live-video" autoplay muted playsinline></video>
+        <canvas id="live-roi" class="live-roi"></canvas>
+        <div id="live-roi-hint" class="live-roi-hint">Drag a rectangle around the chess board.</div>
+      </div>
+      <div class="live-controls">
+        <div class="live-row">
+          <span id="live-status" class="live-status">Idle</span>
+        </div>
+        <div class="live-row">
+          <label class="live-opt">Poll every
+            <select id="live-interval">
+              <option value="200">0.2 s (fastest)</option>
+              <option value="300">0.3 s</option>
+              <option value="500" selected>0.5 s (recommended)</option>
+              <option value="800">0.8 s</option>
+              <option value="1500">1.5 s</option>
+              <option value="3000">3 s</option>
+            </select>
+          </label>
+          <label class="live-opt">Speed
+            <select id="live-speed">
+              <option value="instant" selected>Instant (depth 12, ~0.5 s)</option>
+              <option value="fast">Fast (depth 16, ~1.5 s)</option>
+              <option value="normal">Strong (use main settings)</option>
+            </select>
+          </label>
+        </div>
+        <div class="live-row">
+          <button id="live-roi-clear-btn" class="btn">Clear region</button>
+          <button id="live-stop-btn" class="btn">Stop sharing</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div id="board" class="board"></div>
+      <svg id="arrows" class="arrows" viewBox="0 0 800 800" preserveAspectRatio="none"></svg>
+      <div class="rank-labels">
+        <span>8</span><span>7</span><span>6</span><span>5</span>
+        <span>4</span><span>3</span><span>2</span><span>1</span>
+      </div>
+      <div class="file-labels">
+        <span>a</span><span>b</span><span>c</span><span>d</span>
+        <span>e</span><span>f</span><span>g</span><span>h</span>
+      </div>
+    </div>
+
+    <div class="board-tools">
+      <span class="hint">Drag a piece (or click → click) to play. Pick a palette piece to edit. Right-click clears.</span>
+      <button id="flip-btn" class="btn">Flip board</button>
+    </div>
+
+    <div class="palette" id="palette">
+      <span class="palette-title">Place piece:</span>
+    </div>
+  </section>
+
+  <section class="right">
+    <div class="card">
+      <h2>Position</h2>
+      <label>FEN
+        <input type="text" id="fen-input" spellcheck="false">
+      </label>
+      <div class="row">
+        <label>Side to move
+          <select id="turn">
+            <option value="w">White</option>
+            <option value="b">Black</option>
+          </select>
+        </label>
+        <label>Engine strength
+          <select id="elo">
+            <option value="max" selected>Maximum (~3500+ ELO)</option>
+            <option value="3190">3190 (super-GM)</option>
+            <option value="3000">3000 (super-GM)</option>
+            <option value="2800">2800 (top GM)</option>
+            <option value="2500">2500 (GM)</option>
+            <option value="2200">2200 (master)</option>
+            <option value="1900">1900 (expert)</option>
+            <option value="1600">1600 (club)</option>
+            <option value="1320">1320 (beginner)</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Top moves
+          <select id="multipv">
+            <option>1</option><option>3</option>
+            <option selected>5</option><option>7</option>
+          </select>
+        </label>
+        <label>Depth
+          <select id="depth">
+            <option>14</option><option>18</option>
+            <option selected>22</option><option>26</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="cr-K" checked> White O-O</label>
+        <label class="check"><input type="checkbox" id="cr-Q" checked> White O-O-O</label>
+        <label class="check"><input type="checkbox" id="cr-k" checked> Black O-O</label>
+        <label class="check"><input type="checkbox" id="cr-q" checked> Black O-O-O</label>
+      </div>
+      <button id="analyze-btn" class="btn primary big">Analyse</button>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="card">
+      <h2>Engine analysis</h2>
+      <div id="eval-bar" class="eval-bar"><div id="eval-fill"></div><span id="eval-text">–</span></div>
+      <ol id="moves" class="moves"></ol>
+    </div>
+
+    <div class="card">
+      <h2>Move history</h2>
+      <ol id="history" class="history"></ol>
+    </div>
+  </section>
+</main>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

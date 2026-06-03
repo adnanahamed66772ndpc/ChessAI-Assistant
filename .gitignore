@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# PyInstaller build artifacts (recreated by `pyinstaller ChessAI.spec`)
+build/
+dist/
+release/
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code workspace
+.claude/
+
+# Local backups / scratch
+.chesscom_full_board_backup/
+*.bak
+*.tmp
+
+# Runtime debug output — see uploads/README.md if you need to keep some
+# uploads/dbg_*.png
