@@ -1,5 +1,9 @@
 # Chess AI Assistant
 
+🌐 **Landing page:** https://adnanahamed66772ndpc.github.io/ChessAI-Assistant/
+📦 **Latest release:** https://github.com/adnanahamed66772ndpc/ChessAI-Assistant/releases/latest
+
+
 A desktop chess assistant that captures the board from your screen (or a
 screenshot), recognises the position, and suggests the best moves using a
 bundled Stockfish 17.1 engine. Includes a Flask web UI for the same workflow.
