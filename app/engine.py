@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import logging
 import os
+import platform
+import sys
 import threading
 from dataclasses import dataclass, asdict
 from typing import List, Optional
@@ -22,11 +24,29 @@ from typing import List, Optional
 import chess
 import chess.engine
 
-STOCKFISH_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "stockfish",
-    "stockfish.exe",
-)
+
+def _default_stockfish_path() -> str:
+    """Locate the bundled Stockfish binary.
+
+    PyInstaller `--onedir` builds expose ``sys._MEIPASS`` pointing at the
+    extracted bundle root; in that mode the binary sits under
+    ``<bundle>/stockfish/``. When running from source we look one level up
+    from this file (project root) instead.
+
+    The executable name is OS-specific (``stockfish.exe`` on Windows,
+    plain ``stockfish`` on Linux/macOS)."""
+    bin_name = "stockfish.exe" if platform.system() == "Windows" else "stockfish"
+    bundle_root = getattr(sys, "_MEIPASS", None)
+    if bundle_root:
+        return os.path.join(bundle_root, "stockfish", bin_name)
+    return os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "stockfish",
+        bin_name,
+    )
+
+
+STOCKFISH_PATH = _default_stockfish_path()
 
 # Stockfish 17.1 ELO range from `uci` probe.
 ELO_MIN = 1320

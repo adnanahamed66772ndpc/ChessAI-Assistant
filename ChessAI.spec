@@ -16,21 +16,36 @@
 #   - sets upx=False (UPX-packed binaries are heavily associated with malware)
 #   - keeps console=False (Qt GUI app, no terminal window)
 # The remaining false-positives, if any, can be resolved by code-signing the
-# resulting ChessAI.exe with a commercial certificate.
+# resulting ChessAI binary with a commercial certificate.
+#
+# Cross-platform notes
+# --------------------
+# PyInstaller does not cross-compile. Run this spec on the OS you want to
+# target. The Stockfish binary name is OS-specific:
+#   - Windows: stockfish/stockfish.exe
+#   - Linux/macOS: stockfish/stockfish
+# The CI workflow (.github/workflows/release.yml) downloads the correct
+# binary on each platform before invoking PyInstaller.
 
+import os
+import platform as _platform
 from PyInstaller.utils.hooks import collect_submodules
 
 # python-chess loads submodules lazily; PyInstaller's static analysis misses
 # them. Force-include the whole package.
 hiddenimports = collect_submodules('chess')
 
+_is_windows = _platform.system() == 'Windows'
+_stockfish_name = 'stockfish.exe' if _is_windows else 'stockfish'
+_stockfish_src = os.path.join('stockfish', _stockfish_name)
+
 
 a = Analysis(
     ['desktop_app.py'],
     pathex=[],
-    # Bundled native binaries — Stockfish ships with the app.
-    binaries=[('stockfish/stockfish.exe', 'stockfish')],
-    # Bundled data files — board pixmaps and detector templates.
+    # Bundle Stockfish next to the script. The Analysis copies it into the
+    # build's `stockfish/` directory; engine.py finds it there via sys._MEIPASS.
+    binaries=[(_stockfish_src, 'stockfish')],
     datas=[
         ('static/pieces', 'static/pieces'),
         ('piece_templates', 'piece_templates'),

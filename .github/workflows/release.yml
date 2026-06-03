@@ -1,0 +1,168 @@
+name: Release
+
+# Builds Chess AI Assistant for Windows, Linux, and macOS, packages each as a
+# zip, and uploads the artifacts to the GitHub release matching the pushed tag.
+#
+# Trigger: pushing any tag that starts with `v` (e.g. v1.1.0).
+# Manual:  also runnable from the Actions tab via workflow_dispatch.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to create/update the GitHub release
+
+# Use the official Stockfish 17.1 release as the bundled engine on every
+# platform. AVX2 variant runs on any Intel/AMD CPU from ~2013 onwards.
+env:
+  STOCKFISH_TAG: sf_17.1
+  STOCKFISH_WINDOWS: stockfish-windows-x86-64-avx2.zip
+  STOCKFISH_LINUX:   stockfish-ubuntu-x86-64-avx2.tar
+  STOCKFISH_MACOS:   stockfish-macos-x86-64-modern.tar
+
+jobs:
+  build:
+    name: Build (${{ matrix.label }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            label: windows
+            artifact: ChessAI-windows
+            stockfish_archive: stockfish-windows-x86-64-avx2.zip
+            stockfish_bin: stockfish/stockfish-windows-x86-64-avx2.exe
+            stockfish_dst: stockfish/stockfish.exe
+          - os: ubuntu-latest
+            label: linux
+            artifact: ChessAI-linux
+            stockfish_archive: stockfish-ubuntu-x86-64-avx2.tar
+            stockfish_bin: stockfish/stockfish-ubuntu-x86-64-avx2
+            stockfish_dst: stockfish/stockfish
+          - os: macos-latest
+            label: macos
+            artifact: ChessAI-macos
+            stockfish_archive: stockfish-macos-x86-64-modern.tar
+            stockfish_bin: stockfish/stockfish-macos-x86-64-modern
+            stockfish_dst: stockfish/stockfish
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pyside6 mss opencv-python-headless python-chess numpy flask
+
+      # Replace the Windows-only Stockfish binary checked into the repo with
+      # the official build for the current platform. Done on every platform
+      # (even Windows) so all releases trace back to the same upstream binary.
+      - name: Download Stockfish (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $url = "https://github.com/official-stockfish/Stockfish/releases/download/${{ env.STOCKFISH_TAG }}/${{ matrix.stockfish_archive }}"
+          Invoke-WebRequest -Uri $url -OutFile sf.zip
+          Expand-Archive -Path sf.zip -DestinationPath .
+          Remove-Item -Force stockfish/stockfish.exe -ErrorAction SilentlyContinue
+          Move-Item -Force ${{ matrix.stockfish_bin }} ${{ matrix.stockfish_dst }}
+
+      - name: Download Stockfish (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          curl -L -o sf.tar "https://github.com/official-stockfish/Stockfish/releases/download/${{ env.STOCKFISH_TAG }}/${{ matrix.stockfish_archive }}"
+          tar -xf sf.tar
+          rm -f stockfish/stockfish.exe stockfish/stockfish || true
+          mv ${{ matrix.stockfish_bin }} ${{ matrix.stockfish_dst }}
+          chmod +x ${{ matrix.stockfish_dst }}
+
+      - name: Build with PyInstaller
+        run: pyinstaller ChessAI.spec --noconfirm
+
+      # Sanity-check that the engine path resolves and the binary is present
+      # inside the build before we publish anything.
+      - name: Verify build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = "dist/ChessAI/ChessAI.exe"
+          if (!(Test-Path $exe)) { throw "Build missing: $exe" }
+          if (!(Test-Path "dist/ChessAI/_internal/stockfish/stockfish.exe") -and !(Test-Path "dist/ChessAI/stockfish/stockfish.exe")) {
+            throw "Stockfish missing from build"
+          }
+          Get-ChildItem "dist/ChessAI" | Select-Object -First 5
+
+      - name: Verify build (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          test -x dist/ChessAI/ChessAI || (echo "Build missing: dist/ChessAI/ChessAI" && exit 1)
+          # Stockfish lives either at dist/ChessAI/stockfish or dist/ChessAI/_internal/stockfish
+          # depending on PyInstaller version. Accept either.
+          (test -x dist/ChessAI/stockfish/stockfish || test -x dist/ChessAI/_internal/stockfish/stockfish) \
+            || (echo "Stockfish missing from build" && exit 1)
+          ls dist/ChessAI | head -5
+
+      # Pack the one-folder build as a zip for upload.
+      - name: Package zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $name = "${{ matrix.artifact }}-${{ github.ref_name }}.zip"
+          Compress-Archive -Path "dist/ChessAI/*" -DestinationPath $name -CompressionLevel Optimal
+          "ARTIFACT_PATH=$name" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Package zip (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          name="${{ matrix.artifact }}-${{ github.ref_name }}.zip"
+          # zip preserves the executable bit on Unix; -ry recurses into the folder.
+          (cd dist && zip -ry "../$name" ChessAI)
+          echo "ARTIFACT_PATH=$name" >> "$GITHUB_ENV"
+
+      - name: Upload as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ env.ARTIFACT_PATH }}
+          retention-days: 7
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARTIFACT_PATH }}
+          fail_on_unmatched_files: true
+
+  source-zip:
+    name: Source zip
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build source zip
+        run: |
+          name="ChessAI-source-${{ github.ref_name }}.zip"
+          # Exclude only directories that are noise to redistribute.
+          zip -ry "$name" . \
+            -x "venv/*" "build/*" "dist/*" "__pycache__/*" \
+               "*/__pycache__/*" "release/*" ".git/*" ".github/*"
+          echo "ARTIFACT_PATH=$name" >> "$GITHUB_ENV"
+
+      - name: Attach source zip to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARTIFACT_PATH }}
+          fail_on_unmatched_files: true
